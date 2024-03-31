@@ -9,6 +9,7 @@ warnings.filterwarnings('ignore')
 # Function to load data from GitHub (moved before button usage)
 @st.cache_data
 def load_data():
+    ssl._create_default_https_context = ssl._create_unverified_context
     csv_url = 'https://raw.githubusercontent.com/RoseWairimuK/GDP/main/clean_data.csv'
     df = pd.read_csv(csv_url, decimal=",")
     return df.head()
