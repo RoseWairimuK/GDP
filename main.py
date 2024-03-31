@@ -6,20 +6,28 @@ import ssl
 import warnings
 warnings.filterwarnings('ignore')
 
-st.set_page_config(page_title="GDP Analysis", page_icon=":earth_africa:",layout="wide")
+# Function to load data from GitHub (moved before button usage)
+@st.cache_data
+def load_data():
+    csv_url = 'https://raw.githubusercontent.com/RoseWairimuK/GDP/main/clean_data.csv'
+    df = pd.read_csv(csv_url, decimal=",")
+    return df.head()
 
-st.title(":earth_africa:: Analysis of GDP Per Capita")
-st.markdown('<style>div.block-container{padding-top:1rem;}</style>',unsafe_allow_html=True)
+# Set page configuration
+st.set_page_config(
+    page_title="GDP Analysis",
+    page_icon=":earth_africa:",
+    layout="wide"
+)
+
+# Main title in the main content area
+st.title(":earth_africa: Analysis of GDP Per Capita")
 
 
-# GitHub raw file URL
-ssl._create_default_https_context = ssl._create_unverified_context
-csv_url = 'https://raw.githubusercontent.com/RoseWairimuK/Datasets-/main/countries%20of%20the%20world.csv'
-
-# Read the CSV file from GitHub
-df = pd.read_csv(csv_url, decimal=",")
-
-# Display the data in Streamlit
-st.dataframe(df)
-
-
+# Add a button to the sidebar
+if st.sidebar.button("View Dataset"):
+    with st.expander("View Dataset", expanded=True):
+        df = load_data()
+        st.dataframe(df)  # Display data on the right side
+        if st.button("Close"):
+            st.text("Dataset view closed.")
