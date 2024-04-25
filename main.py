@@ -7,6 +7,8 @@ from streamlit_option_menu import option_menu
 from numerize.numerize import numerize
 import warnings
 import plotly.graph_objects as go
+import pickle
+import xgboost as xgb
 warnings.filterwarnings('ignore')
 
 
@@ -16,7 +18,7 @@ df = pd.read_csv(csv_url)
 
 # Setting page configuration
 st.set_page_config(page_title="GDP Analysis", page_icon="🌎", layout="wide")
-st.subheader("🌎 Prediction of GDP per Capita($) Based on Geo-Economic Factors")
+st.title("🌎 Prediction of GDP per Capita($) Based on Geo-Economic Factors")
 
 # Removing comma separator from Year Column that was bit problematic
 df['Year'] = df['Year'].astype("str")
@@ -32,6 +34,7 @@ st.sidebar.markdown("### Access Jupyter Notebook Here")
 github_link = "https://github.com/RoseWairimuK/GDP/blob/main/gdp.ipynb"
 st.sidebar.markdown(f"[Open Notebook on GitHub]({github_link})")
 
+st.sidebar.image("data/gdpc.png")
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 # Create an expander for dataset view
@@ -43,7 +46,13 @@ with st.expander("View Dataset and Filter Preferred Region and Country", expande
         selected_regions = st.multiselect("Filter by Region", options=["All"] + list(df["Region"].unique()), default=["All"], key="region_filter")
 
     with col2:
-        selected_countries = st.multiselect("Filter by Country", options=["All"] + list(df["Country"].unique()), default=["All"], key="country_filter")
+        # Filter countries based on selected regions
+        if "All" in selected_regions:
+            available_countries = list(df["Country"].unique())
+        else:
+            available_countries = list(df[df["Region"].isin(selected_regions)]["Country"].unique())
+
+        selected_countries = st.multiselect("Filter by Country", options=["All"] + available_countries, default=["All"], key="country_filter")
 
     # Apply filters
     if "All" in selected_regions:
@@ -57,13 +66,13 @@ with st.expander("View Dataset and Filter Preferred Region and Country", expande
     ]
 
     # Display filtered dataset
-    st.write("### Dataset")
+    st.write("### 🔢 Dataset")
     st.dataframe(filtered_df)
 
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 # Creating Key Metrics section
-st.subheader("🔢 Key Metrics")
+st.subheader("📈 Key Metrics")
 
 with st.expander("Key Metrics Related to Region and Country Selected Above as of 2018 (Latest in Dataset)", expanded=True):
     # Filtering dataset based on selected regions and countries
@@ -180,3 +189,69 @@ with st.expander("Explore Features of Interest and Relationships", expanded=True
 
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
+# Filter data for the year 2018
+df_2018 = df[df['Year'] == "2018"]  # Format 'Year' as a string
+
+# Calculate the average GDP per capita for each region in 2018
+average_gdp_per_region_2018 = df_2018.groupby('Region')['GDP_$_per_capita'].mean()
+
+# Define the input section
+st.title("🌍 GDP per capita simulator")
+st.write("Please input the following features:")
+
+# Define input fields for each feature, distributed between two columns
+col1, col2 = st.columns(2)
+
+with col1:
+    population = st.number_input("Population (eg. 50,000,000)", key="population")
+    pop_density = st.number_input("Population Density (people per sq. m)", key="pop_density")
+    infant_mortality = st.number_input("Infant Mortality Rate (per 1000 births)", key="infant_mortality")
+    literacy_rate = st.number_input("Literacy Rate (%)", key="literacy_rate")
+    phones_per_1000 = st.number_input("Phones (per 1000 People)", key="phones_per_1000")
+with col2:
+    birth_rate = st.number_input("Birth Rate (per 1000 people per year)", key="birth_rate")
+    death_rate = st.number_input("Death Rate (per 1000 people per year)", key="death_rate")
+    agriculture = st.number_input(" Value added from Agriculture $B" , key="agriculture")
+    industry = st.number_input("Value added from Industry $B", key="industry")
+    service = st.number_input("Value added from Service $B", key="service")
+
+# When user clicks the "Predict GDP" button
+if st.button("Predict GDP", key="predict_button"):
+    # Load the trained XGBoost model
+    with open('xgb_model.pkl', 'rb') as f:
+        model = pickle.load(f)
+
+    # Create a feature vector
+    features = [[population, pop_density, infant_mortality, literacy_rate, phones_per_1000, birth_rate, death_rate, agriculture, industry, service]]
+
+    # Make prediction
+    prediction = model.predict(features)
+
+    # Show the predicted GDP per capita
+    st.write(f"##### Based on these factors the Predicted GDP per capita is: ${prediction[0]:,.2f}")
+
+    # Create a DataFrame with prediction and average GDP per capita for each region
+    df_plot = pd.DataFrame({'Region': list(average_gdp_per_region_2018.index) + ['YOUR PREDICTION'],
+                            'GDP per capita': list(average_gdp_per_region_2018.values) + [prediction[0]]})
+
+    # Sort the DataFrame by GDP per capita in descending order
+    df_plot_sorted = df_plot.sort_values(by='GDP per capita', ascending=False)
+
+    # Plotting the predicted GDP versus average GDP for each region in 2018
+    st.subheader("❓ Your Prediction vs. Average GDP for the Regions")
+
+    # Create a Plotly bar plot
+    fig = go.Figure()
+
+    # Add bars for each region
+    for region, gdp_per_capita in zip(df_plot_sorted['Region'], df_plot_sorted['GDP per capita']):
+        color = 'orange' if region == 'YOUR PREDICTION' else 'green'
+        fig.add_trace(go.Bar(x=[region], y=[gdp_per_capita], marker_color=color, showlegend=False))
+
+    # Update layout
+    fig.update_layout(title='A comparison of the Predicted GDP vs. Average GDP per Region (2018)',
+                    xaxis_title='Region',
+                    yaxis_title='GDP per capita')
+
+    # Show the plot
+    st.plotly_chart(fig)
