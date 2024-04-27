@@ -13,7 +13,7 @@ warnings.filterwarnings('ignore')
 
 
 # Loading the cleaned dataset
-csv_url = "https://raw.githubusercontent.com/RoseWairimuK/Files/main/gdp_dataset.csv"
+csv_url = "https://raw.githubusercontent.com/RoseWairimuK/Files/main/cleaned_gdp_data.csv"
 df = pd.read_csv(csv_url)
 
 # Setting page configuration
@@ -27,7 +27,7 @@ df['Year'] = df['Year'].astype("str")
 st.sidebar.image("data/gdp.png", caption="GDP ANALYSIS AND PREDICTION BY ROSEMARY KANYORO")
 st.sidebar.image("data/about.png")
 st.sidebar.write("GDP per capita is an important economic metric used globally by economists to analyse a country's prosperity based on its economic growth by measuring how much of a country's overall economic production value can be attributed to each of its citizens. "
-                 "Explore the various geo-economic development factors that affect GDP per capita for different countries and predict the GDP per Capita from your geo-economic inputs of choice using a model that has been trained and tested")
+                 "Explore the various geo-economic development factors that affect GDP per capita for different countries and simulate and predict from your inputs of choice using the eXtreme Gradient Boosting machine learning algorithm that has been trained and tested for the best performance!")
 
 # Adding access the notebook from GitHub
 st.sidebar.markdown("### Access Jupyter Notebook Here")
@@ -43,7 +43,7 @@ with st.expander("View Dataset and Filter Preferred Region and Country", expande
     col1, col2 = st.columns(2)
 
     with col1:
-        selected_regions = st.multiselect("Filter by Region", options=["All"] + list(df["Region"].unique()), default=["All"], key="region_filter")
+        selected_regions = st.multiselect("Filter by Region eg. Sub-Saharan Africa ", options=["All"] + list(df["Region"].unique()), default=["All"], key="region_filter")
 
     with col2:
         # Filter countries based on selected regions
@@ -52,7 +52,7 @@ with st.expander("View Dataset and Filter Preferred Region and Country", expande
         else:
             available_countries = list(df[df["Region"].isin(selected_regions)]["Country"].unique())
 
-        selected_countries = st.multiselect("Filter by Country", options=["All"] + available_countries, default=["All"], key="country_filter")
+        selected_countries = st.multiselect("Filter by Country eg. Kenya", options=["All"] + available_countries, default=["All"], key="country_filter")
 
     # Apply filters
     if "All" in selected_regions:
@@ -74,7 +74,7 @@ with st.expander("View Dataset and Filter Preferred Region and Country", expande
 # Creating Key Metrics section
 st.subheader("📈 Key Metrics")
 
-with st.expander("Key Metrics Related to Region and Country Selected Above as of 2018 (Latest in Dataset)", expanded=True):
+with st.expander("Key Metrics Related to Region and Country Selected Above as of the Latest Data. You can filter based on your selection above!", expanded=True):
     # Filtering dataset based on selected regions and countries
     filtered_df_key_metrics = df.copy()
     if "All" not in selected_regions:
@@ -218,7 +218,7 @@ with col2:
 # When user clicks the "Predict GDP" button
 if st.button("Predict GDP", key="predict_button"):
     # Load the trained XGBoost model
-    with open('xgb_model.pkl', 'rb') as f:
+    with open('Xgb_model.pkl', 'rb') as f:
         model = pickle.load(f)
 
     # Create a feature vector
