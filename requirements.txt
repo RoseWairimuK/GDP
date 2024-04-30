@@ -1,4 +1,10 @@
 plotly
-pandas
 numpy
+streamlit
+plotly
+pandas
 matplotlib
+seaborn
+streamlit-option-menu
+numerize
+xgboost
