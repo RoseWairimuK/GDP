@@ -26,7 +26,7 @@ df['Year'] = df['Year'].astype("str")
 # Sidebar Section
 st.sidebar.image("data/gdp.png", caption="GDP ANALYSIS AND PREDICTION BY ROSEMARY KANYORO")
 st.sidebar.image("data/about.png")
-st.sidebar.write("GDP per capita is an important economic metric used globally by economists to analyse a country's prosperity based on its economic growth by measuring how much of a country's overall economic production value can be attributed to each of its citizens. "
+st.sidebar.write("GDP per capita is an important economic metric used globally to analyse a country's prosperity based on its economic growth by measuring how much of a country's overall economic production value can be attributed to each of its citizens. "
                  "Explore the various geo-economic development factors that affect GDP per capita for different countries and simulate and predict from your inputs of choice using the eXtreme Gradient Boosting machine learning algorithm that has been trained and tested for the best performance!")
 
 # Adding access to my project notebook from GitHub
