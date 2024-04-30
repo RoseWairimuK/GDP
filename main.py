@@ -217,7 +217,7 @@ with col2:
 # When user clicks the "Predict GDP" button
 if st.button("Predict GDP", key="predict_button"):
     # Loading the trained XGBoost model
-    with open('Xgb_model.pkl', 'rb') as f:
+    with open('xgb_model.pkl', 'rb') as f:
         model = pickle.load(f)
 
     # Creating a feature vector
