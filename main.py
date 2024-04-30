@@ -12,7 +12,7 @@ import xgboost as xgb
 warnings.filterwarnings('ignore')
 
 
-# Loading the cleaned dataset
+# Loading the cleaned dataset to visualise a few plots on the App
 csv_url = "https://raw.githubusercontent.com/RoseWairimuK/Files/main/cleaned_gdp_data.csv"
 df = pd.read_csv(csv_url)
 
@@ -29,24 +29,24 @@ st.sidebar.image("data/about.png")
 st.sidebar.write("GDP per capita is an important economic metric used globally by economists to analyse a country's prosperity based on its economic growth by measuring how much of a country's overall economic production value can be attributed to each of its citizens. "
                  "Explore the various geo-economic development factors that affect GDP per capita for different countries and simulate and predict from your inputs of choice using the eXtreme Gradient Boosting machine learning algorithm that has been trained and tested for the best performance!")
 
-# Adding access the notebook from GitHub
+# Adding access to my project notebook from GitHub
 st.sidebar.markdown("### Access Jupyter Notebook Here")
 github_link = "https://github.com/RoseWairimuK/GDP/blob/main/gdp.ipynb"
 st.sidebar.markdown(f"[Open Notebook on GitHub]({github_link})")
 
 st.sidebar.image("data/gdpc.png")
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
-
-# Create an expander for dataset view
+# 1. VIEW DATASET SECTION
+# Creating an expander for dataset view
 with st.expander("View Dataset and Filter Preferred Region and Country", expanded=True):
-    # Align filters horizontally
+
     col1, col2 = st.columns(2)
 
     with col1:
         selected_regions = st.multiselect("Filter by Region eg. Sub-Saharan Africa ", options=["All"] + list(df["Region"].unique()), default=["All"], key="region_filter")
 
     with col2:
-        # Filter countries based on selected regions
+        # Filtering countries based on selected regions
         if "All" in selected_regions:
             available_countries = list(df["Country"].unique())
         else:
@@ -54,23 +54,23 @@ with st.expander("View Dataset and Filter Preferred Region and Country", expande
 
         selected_countries = st.multiselect("Filter by Country eg. Kenya", options=["All"] + available_countries, default=["All"], key="country_filter")
 
-    # Apply filters
+    # Applying filters
     if "All" in selected_regions:
-        selected_regions = list(df["Region"].unique())  # Include all regions
+        selected_regions = list(df["Region"].unique())  
     if "All" in selected_countries:
-        selected_countries = list(df["Country"].unique())  # Include all countries
+        selected_countries = list(df["Country"].unique())  
 
     filtered_df = df[
         df["Region"].isin(selected_regions) &
         df["Country"].isin(selected_countries)
     ]
 
-    # Display filtered dataset
+    # Displaying filtered dataset
     st.write("### 🔢 Dataset")
     st.dataframe(filtered_df)
 
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
-
+# 2. THE KEY METRICS SECTION
 # Creating Key Metrics section
 st.subheader("📈 Key Metrics")
 
@@ -124,13 +124,13 @@ with st.expander("Key Metrics Related to Region and Country Selected Above as of
         st.metric(label="GDP per capita", value=f"{average_gdp_per_capita:,.2f}")
 
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
-
+# 3. THE UNIVARIATE, BIVARIATE AND MULTIVARIATE EDA SECTION
 # Creating the EDA section
 
 st.subheader("📊 Exploratory Data Analysis")
 
 with st.expander("Explore Features of Interest and Relationships", expanded=True):
-    # Filters
+    # Setting uo the region and country filters 
     col1, col2, col3 = st.columns(3)
     with col1:
         selected_region = st.selectbox("Select Region", options=["All"] + list(df["Region"].unique()), index=0)
@@ -152,7 +152,7 @@ with st.expander("Explore Features of Interest and Relationships", expanded=True
     if selected_year != "All":
         filtered_df = filtered_df[filtered_df["Year"] == selected_year]
 
-    # Analysis dropdown
+    # Analysis dropdown option
     analysis_type = st.selectbox("Select Analysis Type", options=["Univariate", "Bivariate", "Multivariate"])
 
     # Removing filters from feature selection
@@ -188,18 +188,17 @@ with st.expander("Explore Features of Interest and Relationships", expanded=True
         st.warning("An error occurred. Please recheck your selected features.")
 
 #••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
-
-# Filter data for the year 2018
+#4. SETTING UP THE GDP SIMULATOR
+# Filtering data for the year 2018 (latest) in order to plot a comparison
 df_2018 = df[df['Year'] == "2018"]  # Format 'Year' as a string
 
-# Calculate the average GDP per capita for each region in 2018
+# Calculating the average GDP per capita for each region in 2018
 average_gdp_per_region_2018 = df_2018.groupby('Region')['GDP_$_per_capita'].mean()
 
-# Define the input section
+# Defining the input section
 st.title("🌍 GDP per capita simulator")
 st.write("Please input the following features:")
 
-# Define input fields for each feature, distributed between two columns
 col1, col2 = st.columns(2)
 
 with col1:
@@ -217,41 +216,41 @@ with col2:
 
 # When user clicks the "Predict GDP" button
 if st.button("Predict GDP", key="predict_button"):
-    # Load the trained XGBoost model
+    # Loading the trained XGBoost model
     with open('Xgb_model.pkl', 'rb') as f:
         model = pickle.load(f)
 
-    # Create a feature vector
+    # Creating a feature vector
     features = [[population, pop_density, infant_mortality, literacy_rate, phones_per_1000, birth_rate, death_rate, agriculture, industry, service]]
 
-    # Make prediction
+    # Making prediction
     prediction = model.predict(features)
 
-    # Show the predicted GDP per capita
+    # Showing the predicted GDP per capita
     st.write(f"##### Based on these factors the Predicted GDP per capita is: ${prediction[0]:,.2f}")
 
-    # Create a DataFrame with prediction and average GDP per capita for each region
+    # Creating a DataFrame with prediction and average GDP per capita for each region for comparison
     df_plot = pd.DataFrame({'Region': list(average_gdp_per_region_2018.index) + ['YOUR PREDICTION'],
                             'GDP per capita': list(average_gdp_per_region_2018.values) + [prediction[0]]})
 
-    # Sort the DataFrame by GDP per capita in descending order
+    # Sorting the DataFrame by GDP per capita in descending order
     df_plot_sorted = df_plot.sort_values(by='GDP per capita', ascending=False)
 
     # Plotting the predicted GDP versus average GDP for each region in 2018
-    st.subheader("❓ Your Prediction vs. Average GDP for the Regions")
+    st.subheader("👉 View Your Prediction vs. Average GDP for the Regions")
 
-    # Create a Plotly bar plot
+    # Creating a bar plot
     fig = go.Figure()
 
-    # Add bars for each region
+    # Adding bars for each region
     for region, gdp_per_capita in zip(df_plot_sorted['Region'], df_plot_sorted['GDP per capita']):
         color = 'orange' if region == 'YOUR PREDICTION' else 'green'
         fig.add_trace(go.Bar(x=[region], y=[gdp_per_capita], marker_color=color, showlegend=False))
 
-    # Update layout
+    # Updating layout
     fig.update_layout(title='A comparison of the Predicted GDP vs. Average GDP per Region (2018)',
                     xaxis_title='Region',
                     yaxis_title='GDP per capita')
 
-    # Show the plot
+    # Showing the plot
     st.plotly_chart(fig)
